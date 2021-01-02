@@ -25,7 +25,11 @@ def add_more_death(WWC):
             death_today = WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['new_deaths']]
             death_yesterday = WWC.loc[(WWC['date'] == (d - pd.DateOffset(days=1))) & (WWC['location'] == c), ['new_deaths']]
 
+            if (death_today.size == 0):
+                continue
             if (math.isnan(death_today.iat[0,0])):
+                continue
+            if (death_yesterday.size == 0):
                 continue
             if (math.isnan(death_yesterday.iat[0,0])):
                 continue
@@ -50,7 +54,11 @@ def add_more_new_cases(WWC):
             new_cases_today = WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['new_cases']]
             new_cases_yesterday = WWC.loc[(WWC['date'] == (d - pd.DateOffset(days=1))) & (WWC['location'] == c), ['new_cases']]
 
+            if (new_cases_today.size == 0):
+                continue
             if (math.isnan(new_cases_today.iat[0,0])):
+                continue
+            if (new_cases_yesterday.size == 0):
                 continue
             if (math.isnan(new_cases_yesterday.iat[0,0])):
                 continue
@@ -181,35 +189,66 @@ def add_statistic_30(WWC):
             WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Death_STATS_entropy']] = \
                 scipy.stats.entropy(series_death)
 
+def add_GDP(WWC):
+    WWC['GDP'] = 0
+    countries = WWC['location'].unique()
+    GDP = pd.read_csv('GDP_number.csv')
+    for c in countries:
+        c_gdp = GDP.loc[(GDP['countries'] == c), ['GDP']]
 
+        if (c_gdp.size == 0):
+            continue
+
+
+        WWC.loc[(WWC['location'] == c), ['GDP']] = c_gdp.iat[0, 0];
+
+def create_WWC_DATA():
+    WWC = pd.read_csv('WorldWideCountries-26-12-2020.csv')
+    WWC['date'] = pd.to_datetime(WWC['date'])
+    add_more_death(WWC)
+    add_more_new_cases(WWC)
+    add_30_columns(WWC)
+    add_new_death_30_ago(WWC)
+    add_new_cases_30_ago(WWC)
+    add_stats_columns(WWC)
+    add_statistic_30(WWC)
+    add_GDP(WWC)
+
+    WWC.to_csv('WWC_data.csv')
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    WWC = pd.read_csv('WorldWideCountries-26-12-2020.csv')
+    # WWC = pd.read_csv('WorldWideCountries-26-12-2020.csv')
+
 
     # ISR = WWC.loc[WWC['location'] == 'Israel']
     # ISR.to_csv('Israel.csv', index=True)
 
-    ISR = pd.read_csv('Israel.csv')
+    # ISR = pd.read_csv('Israel.csv')
 
 
-    ISR['date'] = pd.to_datetime(ISR['date'])
-    add_more_death(ISR)
-    add_more_new_cases(ISR)
-
-    add_30_columns(ISR)
-    add_new_death_30_ago(ISR)
-    add_new_cases_30_ago(ISR)
+    # ISR['date'] = pd.to_datetime(ISR['date'])
+    # add_more_death(ISR)
+    # add_more_new_cases(ISR)
+    #
+    # add_30_columns(ISR)
+    # add_new_death_30_ago(ISR)
+    # add_new_cases_30_ago(ISR)
     # ISR.to_csv('Israel_30.csv')
 
 
-    # ISR = pd.read_csv('Israel_30.csv')
-    add_stats_columns(ISR)
-    add_statistic_30(ISR)
-    ISR.to_csv('Israel_30_stats.csv')
+    # # ISR = pd.read_csv('Israel_30.csv')
+    # add_stats_columns(ISR)
+    # add_statistic_30(ISR)
+    # ISR.to_csv('Israel_30_stats.csv')
 
+    # ISR = pd.read_csv('Israel_30_stats.csv')
+    # add_GDP(ISR)
+    #
+    # ISR.to_csv('test2.csv')
 
+    create_WWC_DATA()
 
 
     print('bla')
