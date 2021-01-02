@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import math
+import scipy.stats
 
 
 def print_hi(name):
@@ -59,16 +60,158 @@ def add_more_new_cases(WWC):
             else:
                 WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['more_new_cases']] = -1
 
+def add_30_columns(WWC):
+    for i in range(1, 31):
+        s = 'new_death_' + str(i) + '_day_ago'
+        WWC[s] = 0
+    for i in range(1, 31):
+        s = 'new_cases_' + str(i) + '_day_ago'
+        WWC[s] = 0
+
+def add_new_death_30_ago(WWC):
+    WWC['more_death'] = 0
+    countries = WWC['location'].unique()
+    for c in countries:
+        CON = WWC.loc[WWC['location'] == c]
+        dates = CON['date']
+        is_first = True
+        for d in dates:
+            for i in range(1,31):
+                s = 'new_death_' + str(i) + '_day_ago'
+                death_ago = WWC.loc[
+                    (WWC['date'] == (d - pd.DateOffset(days=i))) & (WWC['location'] == c), ['new_deaths']]
+
+                if (death_ago.size == 0) :
+                    continue
+
+                if (math.isnan(death_ago.iat[0, 0])):
+                    continue
+
+                WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), [s]] = death_ago.iat[0, 0]
+
+def add_new_cases_30_ago(WWC):
+    WWC['more_death'] = 0
+    countries = WWC['location'].unique()
+    for c in countries:
+        CON = WWC.loc[WWC['location'] == c]
+        dates = CON['date']
+        is_first = True
+        for d in dates:
+            for i in range(1, 31):
+                s = 'new_cases_' + str(i) + '_day_ago'
+                case_ago = WWC.loc[
+                    (WWC['date'] == (d - pd.DateOffset(days=i))) & (WWC['location'] == c), ['new_cases']]
+
+                if (case_ago.size == 0) :
+                    continue
+
+                if (math.isnan(case_ago.iat[0, 0])):
+                    continue
+
+                WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), [s]] = case_ago.iat[0, 0]
+
+def add_stats_columns(WWC):
+    WWC['Cases_STATS_min'] = 0
+    WWC['Cases_STATS_max'] = 0
+    WWC['Cases_STATS_avg'] = 0
+    WWC['Cases_STATS_std'] = 0
+    WWC['Cases_STATS_var'] = 0
+    WWC['Cases_STATS_percentile_25'] = 0
+    WWC['Cases_STATS_percentile_50'] = 0
+    WWC['Cases_STATS_percentile_75'] = 0
+    WWC['Cases_STATS_entropy'] = 0
+
+    WWC['Death_STATS_min'] = 0
+    WWC['Death_STATS_max'] = 0
+    WWC['Death_STATS_avg'] = 0
+    WWC['Death_STATS_std'] = 0
+    WWC['Death_STATS_var'] = 0
+    WWC['Death_STATS_percentile_25'] = 0
+    WWC['Death_STATS_percentile_50'] = 0
+    WWC['Death_STATS_percentile_75'] = 0
+    WWC['Death_STATS_entropy'] = 0
+
+def add_statistic_30(WWC):
+    WWC['more_death'] = 0
+    countries = WWC['location'].unique()
+    for c in countries:
+        CON = WWC.loc[WWC['location'] == c]
+        dates = CON['date']
+        for d in dates:
+            arr_c = np.array([])
+            arr_d = np.array([])
+            for i in range(1, 31):
+                st_cases = 'new_cases_' + str(i) + '_day_ago'
+                st_death = 'new_death_' + str(i) + '_day_ago'
+
+                var_cases = WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), [st_cases]].iat[0, 0]
+                var_death = WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), [st_death]].iat[0, 0]
+
+                arr_c = np.append(arr_c, [var_cases])
+                arr_d = np.append(arr_d, [var_death])
+
+            series_cases = pd.Series(arr_c)
+            series_death = pd.Series(arr_d)
+
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Cases_STATS_min']] = series_cases.min()
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Cases_STATS_max']] = series_cases.max()
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Cases_STATS_avg']] = series_cases.mean()
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Cases_STATS_std']] = series_cases.std()
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Cases_STATS_var']] = series_cases.var()
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Cases_STATS_percentile_25']] = \
+                series_cases.quantile(0.25)
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Cases_STATS_percentile_50']] = \
+                series_cases.quantile(0.5)
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Cases_STATS_percentile_75']] = \
+                series_cases.quantile(0.75)
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Cases_STATS_entropy']] = \
+                scipy.stats.entropy(series_cases)
+
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Death_STATS_min']] = series_death.min()
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Death_STATS_max']] = series_death.max()
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Death_STATS_avg']] = series_death.mean()
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Death_STATS_std']] = series_death.std()
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Death_STATS_var']] = series_death.var()
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Death_STATS_percentile_25']] = \
+                series_death.quantile(0.25)
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Death_STATS_percentile_50']] = \
+                series_death.quantile(0.5)
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Death_STATS_percentile_75']] = \
+                series_death.quantile(0.75)
+            WWC.loc[(WWC['date'] == d) & (WWC['location'] == c), ['Death_STATS_entropy']] = \
+                scipy.stats.entropy(series_death)
+
+
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     WWC = pd.read_csv('WorldWideCountries-26-12-2020.csv')
-    ISR = WWC.loc[WWC['location'] == 'Israel']
-    features = WWC.columns
-    shape = WWC.shape[0]
-    WWC['more_death'] = 0
-    WWC['date'] = pd.to_datetime(WWC['date'])
-    countries = WWC['location'].unique()
-    add_more_death(WWC)
+
+    # ISR = WWC.loc[WWC['location'] == 'Israel']
+    # ISR.to_csv('Israel.csv', index=True)
+
+    ISR = pd.read_csv('Israel.csv')
+
+
+    ISR['date'] = pd.to_datetime(ISR['date'])
+    add_more_death(ISR)
+    add_more_new_cases(ISR)
+
+    add_30_columns(ISR)
+    add_new_death_30_ago(ISR)
+    add_new_cases_30_ago(ISR)
+    # ISR.to_csv('Israel_30.csv')
+
+
+    # ISR = pd.read_csv('Israel_30.csv')
+    add_stats_columns(ISR)
+    add_statistic_30(ISR)
+    ISR.to_csv('Israel_30_stats.csv')
+
+
+
+
     print('bla')
 
 
