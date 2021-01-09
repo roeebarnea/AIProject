@@ -202,9 +202,31 @@ def add_GDP(WWC):
 
         WWC.loc[(WWC['location'] == c), ['GDP']] = c_gdp.iat[0, 0];
 
+def remove_all_nulls(WWC):
+    WWC.drop(['iso_code', 'continent', 'total_cases', 'total_deaths', 'new_deaths_smoothed',
+              'new_cases_smoothed_per_million', 'new_deaths_smoothed_per_million', 'icu_patients',
+              'icu_patients_per_million', 'hosp_patients', 'hosp_patients_per_million', 'hosp_patients',
+              'hosp_patients_per_million', 'weekly_icu_admissions', 'weekly_icu_admissions_per_million',
+              'weekly_hosp_admissions', 'weekly_hosp_admissions_per_million', 'new_tests', 'total_tests',
+              'new_tests_smoothed', 'new_tests_smoothed_per_thousand', 'tests_units', 'total_vaccinations',
+              'total_vaccinations_per_hundred', 'aged_65_older', 'aged_70_older',
+              'cardiovasc_death_rate', 'diabetes_prevalence', 'female_smokers', 'male_smokers',
+              'handwashing_facilities'], axis=1, inplace=True)
+
+    return (WWC.dropna())
+
+def change_negative_to_zero2(WWC):
+    for col in WWC.columns:
+        if (col in ['location', 'date']):
+            continue
+        WWC[col][WWC[col] < 0] = 0
+
+
 def create_WWC_DATA():
     WWC = pd.read_csv('WorldWideCountries-26-12-2020.csv')
     WWC['date'] = pd.to_datetime(WWC['date'])
+    remove_all_nulls(WWC)
+    change_negative_to_zero2(WWC)
     add_more_death(WWC)
     add_more_new_cases(WWC)
     add_30_columns(WWC)
@@ -214,7 +236,7 @@ def create_WWC_DATA():
     add_statistic_30(WWC)
     add_GDP(WWC)
 
-    WWC.to_csv('WWC_data.csv')
+    WWC.to_csv('WWC_data_clean.csv')
 
 
 # Press the green button in the gutter to run the script.
