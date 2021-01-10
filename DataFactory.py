@@ -223,10 +223,12 @@ def change_negative_to_zero2(WWC):
 
 
 def create_WWC_DATA():
-    WWC = pd.read_csv('WorldWideCountries-26-12-2020.csv')
+    WWC = pd.read_csv('WorldWideCountries-09-01-2021.csv')
     WWC['date'] = pd.to_datetime(WWC['date'])
     remove_all_nulls(WWC)
     change_negative_to_zero2(WWC)
+    WWC.to_csv('WWC_clean_09_01_2021.csv')
+
     add_more_death(WWC)
     add_more_new_cases(WWC)
     add_30_columns(WWC)
@@ -236,7 +238,7 @@ def create_WWC_DATA():
     add_statistic_30(WWC)
     add_GDP(WWC)
 
-    WWC.to_csv('WWC_data_clean.csv')
+    WWC.to_csv('WWC_all_data_clean_09_01_2021.csv')
 
 
 # Press the green button in the gutter to run the script.
