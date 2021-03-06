@@ -25,7 +25,6 @@ def series_30_relativity(WWC):
         WWC[s_cases] = WWC[s_cases] / WWC['Cases_STATS_avg']
 
 def arrange_30_statistic(WWC):
-    p = 'population'
     WWC['Cases_STATS_min'] = WWC['Cases_STATS_min']/ 1000000
     WWC['Cases_STATS_max'] = WWC['Cases_STATS_max'] / 1000000
     WWC['Cases_STATS_avg'] = WWC['Cases_STATS_avg'] / 1000000
@@ -41,9 +40,16 @@ def arrange_30_statistic(WWC):
     WWC['Death_STATS_percentile_75'] = WWC['Death_STATS_percentile_75'] / 1000000
 
 def classify_columns_by_percintles(WWC, num_of_classes):
+    col = ['col_name']
+    for i in range(num_of_classes):
+        col.append(str(i)+'_min')
+        col.append(str(i) + '_max')
+    df = pd.DataFrame(columns=col)
+
+
     part = (100/num_of_classes)/100
     for col in WWC.columns:
-        if (col in ['location', 'date']):
+        if (col in ['location', 'date', 'more_new_cases']):
             continue
         # DELETE this------------------
         WWC[col][WWC[col] < 0] = 0
@@ -53,8 +59,25 @@ def classify_columns_by_percintles(WWC, num_of_classes):
         for i in range(num_of_classes+1):
             percentile_val.append(series.quantile(i*part))
 
+        new_row = [col]
+
+        #print("Column name: " + col)
         for i in range(num_of_classes):
-            WWC.loc[(WWC[col] >= percentile_val[i]) & (WWC[col] <= percentile_val[i+1]), col] = i
+            #print("   Class number: " + str(i))
+            #print("   Range: " +str(percentile_val[i]) + " - " + str(percentile_val[i+1]))
+            new_row.append(str(percentile_val[i]))
+            new_row.append(str(percentile_val[i+1]))
+            WWC.loc[(WWC[col] >= percentile_val[i]) & (WWC[col] <= percentile_val[i+1]), col] = i -20
+
+        df.loc[len(df)] = new_row
+
+        WWC[col] += 20
+
+    return df
+
+def drop_irelevant_cols(WWC):
+    WWC.drop(['Unnamed: 0', 'Unnamed: 0.1', 'new_cases', 'new_cases_smoothed', 'new_deaths',
+                 'population', 'more_death'], axis=1, inplace=True)
 
 
 
@@ -68,11 +91,59 @@ if __name__ == '__main__':
     # # print(WWC.total_deaths.describe())
     # print('ARRANGE DATA DONE!')
 
-    WWC = pd.read_csv('WWC_data.csv')
-    ISR = WWC.loc[WWC['location'] == 'Israel']
-    ISR = remove_all_nulls(ISR)
-    series_30_relativity(ISR)
-    arrange_30_statistic(ISR)
-    classify_columns_by_percintles(ISR, 8)
-    # print(WWC.total_deaths.describe())
+    #------------------------------NO NULLS---------------------------------
+
+    WWC_no_nulls = pd.read_csv('WWC_all_data_clean_09_01_2021_no_nulls.csv')
+    drop_irelevant_cols(WWC_no_nulls)
+    series_30_relativity(WWC_no_nulls)
+    arrange_30_statistic(WWC_no_nulls)
+
+    # ----------------- 4 classes -----------------
+    WWC_no_nulls_4_classes = WWC_no_nulls.copy()
+    df_4 = classify_columns_by_percintles(WWC_no_nulls_4_classes, 4)
+
+    WWC_no_nulls_4_classes.to_csv('WWC_09_01_2021_no_nulls_4_classes.csv')
+    df_4.to_csv('WWC_09_01_2021_no_nulls_4_classes_METADATA.csv')
+    # ---------------------------------------------------
+
+    # ----------------- 16 classes -----------------
+    WWC_no_nulls_16_classes = WWC_no_nulls.copy()
+    df_16 = classify_columns_by_percintles(WWC_no_nulls_16_classes, 16)
+
+    WWC_no_nulls_16_classes.to_csv('WWC_09_01_2021_no_nulls_16_classes.csv')
+    df_16.to_csv('WWC_09_01_2021_no_nulls_16_classes_METADATA.csv')
+    # ---------------------------------------------------
+
+    # ------------------------------FIX NULLS WITH AVERAGE ---------------------------------
+
+    WWC_no_nulls_avg = pd.read_csv('WWC_all_data_clean_09_01_2021_replace_nulls_with_average.csv')
+    drop_irelevant_cols(WWC_no_nulls_avg)
+    series_30_relativity(WWC_no_nulls_avg)
+    arrange_30_statistic(WWC_no_nulls_avg)
+
+    # ----------------- 4 classes -----------------
+    WWC_no_nulls_avg_4_classes = WWC_no_nulls_avg.copy()
+    df_avg_4 = classify_columns_by_percintles(WWC_no_nulls_avg_4_classes, 4)
+
+    WWC_no_nulls_avg_4_classes.to_csv('WWC_09_01_2021_no_nulls_AVG_4_classes.csv')
+    df_avg_4.to_csv('WWC_09_01_2021_no_nulls_AVG_4_classes_METADATA.csv')
+    # ---------------------------------------------------
+
+    # ----------------- 8 classes -----------------
+    WWC_no_nulls_avg_8_classes = WWC_no_nulls_avg.copy()
+    df_avg_8 = classify_columns_by_percintles(WWC_no_nulls_avg_8_classes, 8)
+
+    WWC_no_nulls_avg_8_classes.to_csv('WWC_09_01_2021_no_nulls_AVG_8_classes.csv')
+    df_avg_8.to_csv('WWC_09_01_2021_no_nulls_AVG_8_classes_METADATA.csv')
+    # ---------------------------------------------------
+
+    # ----------------- 16 classes -----------------
+    WWC_no_nulls_avg_16_classes = WWC_no_nulls_avg.copy()
+    df_avg_16 = classify_columns_by_percintles(WWC_no_nulls_avg_16_classes, 16)
+
+    WWC_no_nulls_avg_16_classes.to_csv('WWC_09_01_2021_no_nulls_16_classes.csv')
+    df_avg_16.to_csv('WWC_09_01_2021_no_nulls_AVG_16_classes_METADATA.csv')
+    # ---------------------------------------------------
+
     print('ARRANGE DATA DONE!')
+

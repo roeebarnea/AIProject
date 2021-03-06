@@ -28,11 +28,43 @@ def change_negative_to_zero2(WWC):
             continue
         WWC[col][WWC[col] < 0] = 0
 
+def fill_col_with_zero_insted_null(WWC, col):
+    WWC[[col]] = WWC[[col]].fillna(value=0)
+
+def cleaning(WWC):
+    WWC.drop(['new_vaccinations', 'new_vaccinations_per_million'], axis=1, inplace=True)
+    fill_col_with_zero_insted_null(WWC, 'new_cases')
+    fill_col_with_zero_insted_null(WWC, 'new_cases_smoothed')
+    fill_col_with_zero_insted_null(WWC, 'new_deaths')
+    fill_col_with_zero_insted_null(WWC, 'total_cases_per_million')
+    fill_col_with_zero_insted_null(WWC, 'new_cases_per_million')
+    fill_col_with_zero_insted_null(WWC, 'total_deaths_per_million')
+    fill_col_with_zero_insted_null(WWC, 'new_deaths_per_million')
+    fill_col_with_zero_insted_null(WWC, 'reproduction_rate')
+
+def complete_cols_with_average(WWC):
+    WWC['total_tests_per_thousand'].fillna((WWC['total_tests_per_thousand'].mean()), inplace=True)
+    WWC['new_tests_per_thousand'].fillna((WWC['new_tests_per_thousand'].mean()), inplace=True)
+    WWC['positive_rate'].fillna((WWC['positive_rate'].mean()), inplace=True)
+    WWC['tests_per_case'].fillna((WWC['tests_per_case'].mean()), inplace=True)
+    WWC['stringency_index'].fillna((WWC['stringency_index'].mean()), inplace=True)
+    WWC['population_density'].fillna((WWC['population_density'].mean()), inplace=True)
+    WWC['median_age'].fillna((WWC['median_age'].mean()), inplace=True)
+    WWC['gdp_per_capita'].fillna((WWC['gdp_per_capita'].mean()), inplace=True)
+    WWC['hospital_beds_per_thousand'].fillna((WWC['hospital_beds_per_thousand'].mean()), inplace=True)
+    WWC['human_development_index'].fillna((WWC['human_development_index'].mean()), inplace=True)
+
 
 if __name__ == '__main__':
-    WWC = pd.read_csv('WorldWideCountries-26-12-2020.csv')
-    remove_all_nulls(WWC)
-    change_negative_to_zero2(WWC)
+    WWC = pd.read_csv('test_WWC_all_data_clean_09_01_2021.csv')
+    WWC.drop(['extreme_poverty'], axis=1, inplace=True)
+
+    complete_cols_with_average(WWC)
+    WWC.dropna(inplace=True)
+    WWC.to_csv('WWC_all_data_clean_09_01_2021_replace_nulls_with_average.csv')
 
 
-    WWC.to_csv('WWC_clean.csv')
+
+    #WWC.dropna(inplace=True)
+    #WWC.to_csv('WWC_all_data_clean_09_01_2021_no_nulls.csv')
+
